@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Query System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6">
+            <h1 class="text-2xl font-bold mb-6 text-center">Document Intelligence System</h1>
+            
+            <!-- File Upload Section -->
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Upload PDF Document
+                </label>
+                <input 
+                    type="file" 
+                    id="fileUpload" 
+                    accept=".pdf" 
+                    class="w-full p-2 border rounded"
+                >
+                <button 
+                    onclick="uploadFile()"
+                    class="mt-2 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+                >
+                    Upload
+                </button>
+            </div>
+
+            <!-- Query Section -->
+            <div id="querySection" class="hidden">
+                <input 
+                    type="text" 
+                    id="queryInput" 
+                    placeholder="Enter your query" 
+                    class="w-full p-2 border rounded mb-4"
+                >
+                <button 
+                    onclick="queryDocument()"
+                    class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600"
+                >
+                    Query Document
+                </button>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="mt-6 hidden">
+                <h2 class="text-xl font-semibold mb-4">Results</h2>
+                <pre id="resultsOutput" class="bg-gray-50 p-4 rounded overflow-auto max-h-96"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedFilePath = null;
+
+        function uploadFile() {
+            const fileInput = document.getElementById('fileUpload');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            axios.post('/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            .then(response => {
+                uploadedFilePath = response.data.file_path;
+                document.getElementById('querySection').classList.remove('hidden');
+                alert('File uploaded successfully!');
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                alert('Upload failed');
+            });
+        }
+
+        function queryDocument() {
+            const queryInput = document.getElementById('queryInput');
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsOutput = document.getElementById('resultsOutput');
+
+            if (!uploadedFilePath) {
+                alert('Please upload a file first');
+                return;
+            }
+
+            axios.post('/query', {
+                file_path: uploadedFilePath,
+                query: queryInput.value
+            })
+            .then(response => {
+                resultsOutput.textContent = JSON.stringify(response.data, null, 2);
+                resultsSection.classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Query error:', error);
+                alert('Query failed');
+            });
+        }
+    </script>
+</body>
+</html>
